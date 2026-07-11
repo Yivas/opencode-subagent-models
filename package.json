@@ -1,0 +1,41 @@
+{
+  "name": "opencode-subagent-models",
+  "version": "0.1.0",
+  "description": "Switch every OpenCode subagent between its default model and a shared model override.",
+  "type": "module",
+  "exports": "./src/index.ts",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test.ts",
+    "prepack": "npm test"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.17.18"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "subagents",
+    "models"
+  ],
+  "author": "Yivas",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yivas/opencode-subagent-models.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Yivas/opencode-subagent-models/issues"
+  },
+  "homepage": "https://github.com/Yivas/opencode-subagent-models#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}
