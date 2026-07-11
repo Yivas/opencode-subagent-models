@@ -74,7 +74,7 @@ Load a local checkout by adding its entry file to your OpenCode configuration:
 ```json
 {
   "plugin": [
-    "file:///D:/Documents/1.Codigo/opencode-subagent-models/src/index.ts"
+    "file:///path/to/opencode-subagent-models/src/index.ts"
   ]
 }
 ```
