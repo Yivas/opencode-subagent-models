@@ -1,8 +1,9 @@
 {
   "name": "opencode-subagent-models",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenCode plugin to switch all subagents between their configured models and a shared model override.",
   "type": "module",
+  "main": "./src/index.ts",
   "exports": "./src/index.ts",
   "files": [
     "src",
