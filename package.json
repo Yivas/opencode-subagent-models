@@ -1,7 +1,7 @@
 {
   "name": "opencode-subagent-models",
   "version": "0.1.0",
-  "description": "Switch every OpenCode subagent between its default model and a shared model override.",
+  "description": "OpenCode plugin to switch all subagents between their configured models and a shared model override.",
   "type": "module",
   "exports": "./src/index.ts",
   "files": [
@@ -15,9 +15,6 @@
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1.17.18"
-  },
-  "engines": {
-    "node": ">=22.18"
   },
   "keywords": [
     "opencode",

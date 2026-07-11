@@ -38,6 +38,14 @@ try {
   const execute = hooks.tool?.subagent_model.execute
   assert.ok(execute)
 
+  const pluginConfig = {} as Config
+  await hooks.config?.(pluginConfig)
+  assert.equal(
+    pluginConfig.command?.["subagents-model"].description,
+    "Switch all subagents between their configured models and a shared model override.",
+  )
+  assert.match(pluginConfig.command?.["subagents-model"].template ?? "", /^Configure the model used by all subagents/)
+
   let confirmed = false
   const result = await execute({ model: "openai/gpt-5" }, {
     agent: "build",
@@ -45,14 +53,22 @@ try {
   } as never)
 
   assert.equal(confirmed, true)
-  assert.match(result as string, /openai\/gpt-5/)
+  assert.match(result as string, /Model openai\/gpt-5 saved for all subagents/)
   assert.deepEqual(
     JSON.parse(await readFile(join(temporaryRoot, "opencode", "subagent-model.json"), "utf8")),
     { mode: "forced", model: "openai/gpt-5" },
   )
+  assert.match(
+    await execute({ model: "default" }, { agent: "build", ask: async () => {} } as never) as string,
+    /Default mode saved/,
+  )
+  await assert.rejects(
+    execute({ model: "invalid" }, { agent: "build", ask: async () => {} } as never),
+    /provider\/model/,
+  )
   await assert.rejects(
     execute({ model: "default" }, { agent: "orchestrator" } as never),
-    /agente build/,
+    /build agent/,
   )
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true })

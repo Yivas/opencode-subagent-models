@@ -35,7 +35,7 @@ async function saveState(model: string): Promise<ModelState> {
     : parseModelState({ mode: "forced", model: value })
 
   if (value.toLowerCase() !== "default" && state.mode === "default") {
-    throw new Error("Usa 'default' o un modelo con formato provider/model.")
+    throw new Error("Use 'default' or a model in provider/model format.")
   }
 
   await mkdir(configDirectory, { recursive: true })
@@ -60,23 +60,23 @@ const server: Plugin = async () => ({
   config: async (config) => {
     config.command ??= {}
     config.command["subagents-model"] = {
-      description: "Cambia todos los subagentes entre sus modelos por defecto y un modelo comun.",
+      description: "Switch all subagents between their configured models and a shared model override.",
       agent: "build",
-      template: `Configura el modelo de todos los subagentes. El argumento recibido es: "$ARGUMENTS".
+      template: `Configure the model used by all subagents. The supplied argument is: "$ARGUMENTS".
 
-Si el argumento esta vacio, pregunta al usuario si quiere "default" o un modelo con formato provider/model. Despues llama exactamente una vez a subagent_model con la eleccion. Si hay argumento, llama directamente a subagent_model con ese valor. No hagas ningun otro cambio.`,
+If the argument is empty, ask the user to choose "default" or enter a model in provider/model format. Then call subagent_model exactly once with that choice. If an argument is present, call subagent_model directly with that value. Make no other changes.`,
     }
     applyModelOverride(config, await readState())
   },
   tool: {
     subagent_model: tool({
-      description: "Guarda el modelo comun de los subagentes o restaura sus modelos por defecto.",
+      description: "Save a shared subagent model or restore each subagent's configured model.",
       args: {
-        model: tool.schema.string().describe("'default' o un identificador provider/model"),
+        model: tool.schema.string().describe("'default' or a provider/model identifier"),
       },
       async execute({ model }, context) {
         if (context.agent !== "build") {
-          throw new Error("Usa /subagents-model; este ajuste solo puede ejecutarse con el agente build.")
+          throw new Error("Use /subagents-model; only the build agent can change this setting.")
         }
         await context.ask({
           permission: "subagent_model",
@@ -86,8 +86,8 @@ Si el argumento esta vacio, pregunta al usuario si quiere "default" o un modelo 
         })
         const state = await saveState(model)
         return state.mode === "default"
-          ? "Modo default guardado. Reinicia OpenCode para restaurar el modelo propio de cada subagente."
-          : `Modelo ${state.model} guardado para todos los subagentes. Reinicia OpenCode para aplicarlo.`
+          ? "Default mode saved. Restart OpenCode to restore each subagent's configured model."
+          : `Model ${state.model} saved for all subagents. Restart OpenCode to apply it.`
       },
     }),
   },
