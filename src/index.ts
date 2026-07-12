@@ -1,26 +1,36 @@
-import type { Config, Plugin, PluginModule } from "@opencode-ai/plugin"
-import { readState, type ModelState } from "./state.ts"
+import type { Plugin, PluginModule } from "@opencode-ai/plugin"
+import { readSessionOverride, readState, type ModelState } from "./state.ts"
 
 export { parseModelState } from "./state.ts"
 
-// ponytail: built-in subagents are absent from the merged config; extend when OpenCode ships more
-const BUILTIN_SUBAGENTS = ["general", "explore", "scout"]
-
-export function applyModelOverride(config: Config, state: ModelState): void {
-  if (state.mode === "default") return
-  config.agent ??= {}
-  for (const name of BUILTIN_SUBAGENTS) {
-    const agent = (config.agent[name] ??= { mode: "subagent" })
-    agent.mode ??= "subagent"
+export async function findSessionOverride(
+  sessionID: string,
+  getParentID: (id: string) => Promise<string | undefined>,
+): Promise<ModelState | undefined> {
+  let parentID = await getParentID(sessionID)
+  if (!parentID) return undefined
+  while (parentID) {
+    const state = await readSessionOverride(parentID)
+    if (state) return state.mode === "forced" ? state : readState()
+    parentID = await getParentID(parentID)
   }
-  for (const agent of Object.values(config.agent)) {
-    if (agent.mode === "subagent") agent.model = state.model
-  }
+  return readState()
 }
 
-const server: Plugin = async () => ({
-  config: async (config) => {
-    applyModelOverride(config, await readState())
+const server: Plugin = async ({ client, directory }) => ({
+  "chat.message": async (input, output) => {
+    const state = await findSessionOverride(input.sessionID, async (id) => {
+      const response = await client.session.get({ path: { id }, query: { directory } })
+      return response.data?.parentID
+    })
+    if (!state || state.mode === "default") return
+
+    const separator = state.model.indexOf("/")
+    const model = output.message.model as typeof output.message.model & { variant?: string }
+    model.providerID = state.model.slice(0, separator)
+    model.modelID = state.model.slice(separator + 1)
+    if (state.variant) model.variant = state.variant
+    else delete model.variant
   },
 })
 

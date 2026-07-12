@@ -1,7 +1,7 @@
 {
   "name": "opencode-subagent-models",
   "version": "0.2.0",
-  "description": "OpenCode plugin to switch all subagents between their configured models and a shared model override.",
+  "description": "OpenCode plugin to set global or per-session models and reasoning variants for subagents.",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
@@ -15,11 +15,14 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node test.ts",
+    "typecheck": "tsc --noEmit --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions --skipLibCheck src/index.ts src/state.ts src/tui.ts test.ts",
+    "test": "npm run typecheck && node test.ts",
     "prepack": "npm test"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.17.18"
+    "@opencode-ai/plugin": "^1.17.18",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.2"
   },
   "keywords": [
     "opencode",

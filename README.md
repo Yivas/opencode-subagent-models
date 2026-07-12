@@ -1,20 +1,23 @@
 # opencode-subagent-models
 
-Switch every OpenCode subagent between its configured model and a shared model override.
+Set one model and reasoning variant for every OpenCode subagent, globally or for one session.
 
 Use a stronger model for a difficult task, move all delegated work to a cheaper model, or restore each subagent's original configuration with one command. Primary agents and agents with `mode: all` remain unchanged.
 
 ## Features
 
-- Applies one `provider/model` override to every agent with `mode: subagent`.
+- Applies a global `provider/model` override to delegated subagents.
+- Lets one session and its delegated subagents override the global selection.
 - Restores each subagent's configured model without rewriting agent files.
-- Adds a "Change subagent model" entry to the command palette that opens a native model selector.
-- Registers `/subagents-model` to open the same selector.
+- Adds global and session model commands under `Agent` in the command palette.
+- Registers `/subagents-model` and `/subagents-model-session`.
 - Works with global and project-level subagents after OpenCode merges its configuration.
 
 ## Installation
 
-Add the package to the `plugin` array in your global `~/.config/opencode/opencode.json`:
+OpenCode loads server and TUI plugins from separate configuration files. Add the package to both files.
+
+`~/.config/opencode/opencode.json`:
 
 ```json
 {
@@ -23,32 +26,42 @@ Add the package to the `plugin` array in your global `~/.config/opencode/opencod
 }
 ```
 
-OpenCode installs npm plugins automatically. Restart OpenCode after changing the configuration.
+`~/.config/opencode/tui.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["opencode-subagent-models"]
+}
+```
+
+OpenCode installs npm plugins automatically. Restart OpenCode after changing either configuration file.
 
 ## Usage
 
-Open the command palette and pick **Change subagent model**, or type:
+Open the command palette and choose **Global subagent model** or **Session subagent model**. The matching slash commands are:
 
 ```text
 /subagents-model
+/subagents-model-session
 ```
 
-Both open a native selector listing every model from your configured providers, plus a **Default** entry that restores each subagent's own configuration. Selecting an option saves it immediately.
+Each model selector keeps **Default** first, followed by models grouped by provider. After choosing a model, select its reasoning variant. Global **Default** restores each subagent's configuration. Session **Default** removes the session override and inherits the global selection.
 
-Restart OpenCode to apply the new setting to subagent sessions.
+The session override applies to subagents delegated from that conversation. Other sessions and terminals keep their own session override or inherit the global selection.
 
 ## Scope
 
 | Agent mode | Result |
 | --- | --- |
-| `subagent` | Uses the shared override when enabled |
-| `primary` | Never changed |
-| `all` | Never changed |
-| `subagent` with `default` selected | Uses its own configured model |
+| Delegated subagent | Uses the global override when enabled |
+| Delegated subagent in an overridden session | Uses the session model and variant |
+| Primary session | Never changed |
+| Subagent with global `Default` | Uses its configured model |
 
 ## How it works
 
-The selector stores its setting in `~/.config/opencode/subagent-model.json`. At startup, the plugin updates the merged OpenCode configuration only for agents whose mode is exactly `subagent`.
+The global selection is stored in `~/.config/opencode/subagent-model.json`. Session selections use one file per session under `~/.config/opencode/subagent-models/`; selecting session **Default** writes a default marker there. A message hook resolves the nearest session override, then the global selection, whenever OpenCode starts a delegated subagent.
 
 The `default` setting skips the override. It does not copy, edit, or back up agent files.
 
@@ -60,7 +73,7 @@ npm test
 npm pack --dry-run
 ```
 
-Load a local checkout by adding its directory to your OpenCode configuration, so both the server and TUI entries resolve:
+Load a local checkout by adding its directory to the `plugin` array in both `opencode.json` and `tui.json`, so the server and TUI entries resolve:
 
 ```json
 {
