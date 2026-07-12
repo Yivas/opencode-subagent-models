@@ -1,6 +1,6 @@
 {
   "name": "opencode-subagent-models",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "OpenCode plugin to set global or per-session models and reasoning variants for subagents.",
   "type": "module",
   "main": "./src/index.ts",
@@ -28,7 +28,9 @@
     "opencode",
     "plugin",
     "subagents",
-    "models"
+    "models",
+    "reasoning",
+    "session"
   ],
   "author": "Yivas",
   "license": "MIT",
