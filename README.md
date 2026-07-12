@@ -8,7 +8,8 @@ Use a stronger model for a difficult task, move all delegated work to a cheaper 
 
 - Applies one `provider/model` override to every agent with `mode: subagent`.
 - Restores each subagent's configured model without rewriting agent files.
-- Includes the `/subagents-model` command for direct or prompted selection.
+- Adds a "Change subagent model" entry to the command palette that opens a native model selector.
+- Registers `/subagents-model` to open the same selector.
 - Works with global and project-level subagents after OpenCode merges its configuration.
 
 ## Installation
@@ -26,25 +27,15 @@ OpenCode installs npm plugins automatically. Restart OpenCode after changing the
 
 ## Usage
 
-Set one model for all subagents:
-
-```text
-/subagents-model openai/gpt-5.2-codex
-```
-
-Restore each subagent's configured model:
-
-```text
-/subagents-model default
-```
-
-Run the command without an argument to enter a model after a prompt:
+Open the command palette and pick **Change subagent model**, or type:
 
 ```text
 /subagents-model
 ```
 
-OpenCode checks the configured permission before saving the new setting. Restart OpenCode to apply it to new subagent sessions.
+Both open a native selector listing every model from your configured providers, plus a **Default** entry that restores each subagent's own configuration. Selecting an option saves it immediately.
+
+Restart OpenCode to apply the new setting to subagent sessions.
 
 ## Scope
 
@@ -57,7 +48,7 @@ OpenCode checks the configured permission before saving the new setting. Restart
 
 ## How it works
 
-The plugin stores its setting in `~/.config/opencode/subagent-model.json`. At startup, it updates the merged OpenCode configuration only for agents whose mode is exactly `subagent`.
+The selector stores its setting in `~/.config/opencode/subagent-model.json`. At startup, the plugin updates the merged OpenCode configuration only for agents whose mode is exactly `subagent`.
 
 The `default` setting skips the override. It does not copy, edit, or back up agent files.
 
@@ -69,19 +60,19 @@ npm test
 npm pack --dry-run
 ```
 
-Load a local checkout by adding its entry file to your OpenCode configuration:
+Load a local checkout by adding its directory to your OpenCode configuration, so both the server and TUI entries resolve:
 
 ```json
 {
   "plugin": [
-    "file:///path/to/opencode-subagent-models/src/index.ts"
+    "file:///path/to/opencode-subagent-models"
   ]
 }
 ```
 
 ## Requirements
 
-- OpenCode `1.17.18` or newer.
+- OpenCode `1.17.18`. The plugin currently uses OpenCode's v1 TUI command bridge.
 - Node.js `22.18` or newer for local tests.
 
 ## License
