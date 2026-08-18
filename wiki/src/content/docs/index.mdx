@@ -1,0 +1,47 @@
+---
+title: Subagent Models
+sidebar:
+  label: Overview
+description: Global and per-session model selection for OpenCode subagents.
+hero:
+  title: Choose models for delegated work
+  tagline: Set one global route or override a single session without changing the primary model.
+  actions:
+    - text: Install
+      link: ./getting-started/installation/
+      variant: primary
+    - text: Quick start
+      link: ./getting-started/quick-start/
+      variant: secondary
+---
+
+`opencode-subagent-models` adds global and per-session model selection to OpenCode subagents. Version 0.2.3 keeps the primary session model unchanged and applies a selected reasoning variant only to delegated work.
+
+## How selection works
+
+1. A primary session delegates work to a subagent.
+2. The plugin checks the nearest session selection in that branch.
+3. Without a session selection, it uses the global selection.
+4. **Default** returns control to the next documented scope.
+
+| Context | Result |
+|-|-|
+| Primary session | Keeps the model selected by OpenCode. |
+| Delegated work with a session override | Uses the nearest session model and variant. |
+| Delegated work without a session override | Uses the global selection. |
+| Global **Default** | Uses each subagent's configured model. |
+
+:::note[Local state only]
+The plugin stores model routing choices in local JSON files. It does not store prompts, responses, provider credentials, or analytics.
+:::
+
+## Choose a path
+
+- [Install the package](./getting-started/installation/) in both OpenCode plugin files.
+- [Make the first selection](./getting-started/quick-start/).
+- [Understand Default and inheritance](./reference/default-and-inheritance/) before combining scopes.
+- [Troubleshoot loading or state](./guides/troubleshooting/) without exposing private data.
+
+## Project boundaries
+
+The plugin does not edit agent files, change the primary model, add telemetry, or make network requests of its own. It supports OpenCode `1.17.18`; other versions require the same v1 TUI command bridge.

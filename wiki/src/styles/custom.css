@@ -1,0 +1,26 @@
+:root {
+  --sl-color-accent-low: #cffafe;
+  --sl-color-accent: #0e7490;
+  --sl-color-accent-high: #164e63;
+  --wiki-focus: #b45309;
+}
+
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #083344;
+  --sl-color-accent: #22d3ee;
+  --sl-color-accent-high: #cffafe;
+  --wiki-focus: #fbbf24;
+}
+
+@media (min-width: 72rem) {
+  :root {
+    --sl-content-width: calc(
+      100vw - var(--sl-sidebar-width) - var(--sl-sidebar-width)
+    );
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--wiki-focus);
+  outline-offset: 3px;
+}

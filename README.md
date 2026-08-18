@@ -2,7 +2,7 @@
 
 Set one model and reasoning variant for every OpenCode subagent, globally or for one session.
 
-Use a stronger model for a difficult task, move delegated work to a cheaper model, or restore each subagent's configured model. Primary sessions remain unchanged.
+Use a stronger model for a difficult task, move delegated work to a cheaper model, or restore each subagent's configured model. Primary sessions remain unchanged. Read the [public documentation](https://yivas.github.io/opencode-subagent-models/) for guided setup and reference material.
 
 ## Features
 
