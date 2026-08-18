@@ -181,6 +181,140 @@ try {
   )
   assert.deepEqual(defaultMessage.model, { providerID: "anthropic", modelID: "configured" })
 
+  type CapturedOption = {
+    title: string
+    description?: string
+    category?: string
+    value: unknown
+  }
+  type CapturedDialog = {
+    title: string
+    options: CapturedOption[]
+    onSelect?: (option: CapturedOption) => unknown
+  }
+  type CapturedCommand = {
+    value: string
+    slash?: { name: string }
+    onSelect?: () => unknown
+  }
+
+  let commandFactory: (() => CapturedCommand[]) | undefined
+  let currentDialog: CapturedDialog | undefined
+  let currentRoute: { params?: { sessionID?: string } } = { params: { sessionID: "root-ui" } }
+  let disposePlugin: (() => void | Promise<void>) | undefined
+  let disposed = false
+  let clearedDialogs = 0
+  const toasts: Array<{ variant: string; message: string }> = []
+  const tuiApi = {
+    command: {
+      register: (factory: () => CapturedCommand[]) => {
+        commandFactory = factory
+        return () => { disposed = true }
+      },
+    },
+    lifecycle: {
+      onDispose: (dispose: () => void | Promise<void>) => {
+        disposePlugin = dispose
+        return () => {}
+      },
+    },
+    route: {
+      get current() { return currentRoute },
+    },
+    state: {
+      provider: [
+        {
+          id: "zeta",
+          name: "Zeta",
+          models: { small: { id: "small", name: "Small", variants: {} } },
+        },
+        {
+          id: "openai",
+          name: "OpenAI",
+          models: { "gpt-5": { id: "gpt-5", name: "GPT-5", variants: { high: {} } } },
+        },
+      ],
+    },
+    ui: {
+      dialog: {
+        clear: () => { clearedDialogs++ },
+        replace: (render: () => unknown) => { render() },
+      },
+      DialogSelect: (props: CapturedDialog) => {
+        currentDialog = props
+        return props
+      },
+      toast: (toast: { variant: string; message: string }) => { toasts.push(toast) },
+    },
+  }
+
+  await tuiPlugin.tui(tuiApi as never)
+  const commands = commandFactory?.()
+  assert.ok(commands)
+  assert.deepEqual(commands.map((command) => [command.value, command.slash?.name]), [
+    ["subagent_models.global", "subagents-model"],
+    ["subagent_models.session", "subagents-model-session"],
+  ])
+
+  const globalCommand = commands[0]
+  assert.ok(globalCommand)
+  await globalCommand.onSelect?.()
+  assert.equal(currentDialog?.title, "Global subagent model")
+  assert.deepEqual(currentDialog?.options.map((option) => option.title), ["Default", "GPT-5", "Small"])
+  assert.deepEqual(currentDialog?.options.map((option) => option.category), ["Default", "OpenAI (openai)", "Zeta (zeta)"])
+
+  const globalModelOption = currentDialog?.options.find((option) => option.description === "openai/gpt-5")
+  assert.ok(globalModelOption)
+  await currentDialog?.onSelect?.(globalModelOption)
+  assert.equal(currentDialog?.title, "Reasoning variant")
+  assert.deepEqual(currentDialog?.options.map((option) => option.title), ["Default", "high"])
+  const highVariant = currentDialog?.options.find((option) => option.title === "high")
+  assert.ok(highVariant)
+  await currentDialog?.onSelect?.(highVariant)
+  assert.deepEqual(await readState(), { mode: "forced", model: "openai/gpt-5", variant: "high" })
+  assert.deepEqual(toasts.at(-1), {
+    variant: "success",
+    message: "Global subagents will use openai/gpt-5 (high).",
+  })
+
+  const sessionCommand = commands[1]
+  assert.ok(sessionCommand)
+  await sessionCommand.onSelect?.()
+  assert.equal(currentDialog?.title, "Session subagent model")
+  const sessionDefault = currentDialog?.options[0]
+  assert.ok(sessionDefault)
+  await currentDialog?.onSelect?.(sessionDefault)
+  assert.deepEqual(await readSessionState("root-ui"), { mode: "default" })
+
+  currentRoute = {}
+  await sessionCommand.onSelect?.()
+  assert.deepEqual(toasts.at(-1), { variant: "warning", message: "Open a session first." })
+
+  currentRoute = { params: { sessionID: "../invalid" } }
+  await sessionCommand.onSelect?.()
+  assert.deepEqual(toasts.at(-1), {
+    variant: "error",
+    message: "Could not read the saved subagent model state.",
+  })
+
+  await globalCommand.onSelect?.()
+  const failingModelOption = currentDialog?.options.find((option) => option.description === "openai/gpt-5")
+  assert.ok(failingModelOption)
+  await currentDialog?.onSelect?.(failingModelOption)
+  const failingVariant = currentDialog?.options.find((option) => option.title === "high")
+  assert.ok(failingVariant)
+  const globalStatePath = join(temporaryRoot, "opencode", "subagent-model.json")
+  await rm(globalStatePath, { force: true })
+  await mkdir(globalStatePath)
+  await currentDialog?.onSelect?.(failingVariant)
+  assert.equal(toasts.at(-1)?.variant, "error")
+  await rm(globalStatePath, { recursive: true, force: true })
+  await saveState("default")
+
+  assert.ok(clearedDialogs >= 3)
+  await disposePlugin?.()
+  assert.equal(disposed, true)
+
   await assert.rejects(saveState("invalid"), /provider\/model/)
   await assert.rejects(saveSessionState("../escape", "openai/gpt-5"), /session ID/)
 } finally {

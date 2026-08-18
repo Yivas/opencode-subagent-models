@@ -14,20 +14,25 @@ type SelectionScope = {
   save: (model: string, variant?: string) => Promise<ModelState>
 }
 
-function saveSelection(api: TuiPluginApi, scope: SelectionScope, model: string, variant?: string) {
+async function saveSelection(
+  api: TuiPluginApi,
+  scope: SelectionScope,
+  model: string,
+  variant?: string,
+): Promise<void> {
   api.ui.dialog.clear()
-  scope.save(model, variant)
-    .then((state) => {
-      api.ui.toast({
-        variant: "success",
-        message: state.mode === "default"
-          ? `${scope.label} subagent override cleared.`
-          : `${scope.label} subagents will use ${state.model}${state.variant ? ` (${state.variant})` : ""}.`,
-      })
+  try {
+    const state = await scope.save(model, variant)
+    api.ui.toast({
+      variant: "success",
+      message: state.mode === "default"
+        ? `${scope.label} subagent override cleared.`
+        : `${scope.label} subagents will use ${state.model}${state.variant ? ` (${state.variant})` : ""}.`,
     })
-    .catch((error: Error) => {
-      api.ui.toast({ variant: "error", message: error.message })
-    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not save the subagent model override."
+    api.ui.toast({ variant: "error", message })
+  }
 }
 
 function openVariantSelector(
@@ -110,6 +115,14 @@ async function openSelector(api: TuiPluginApi, scope: SelectionScope) {
   )
 }
 
+async function showSelector(api: TuiPluginApi, scope: SelectionScope): Promise<void> {
+  try {
+    await openSelector(api, scope)
+  } catch {
+    api.ui.toast({ variant: "error", message: "Could not read the saved subagent model state." })
+  }
+}
+
 const tui = async (api: TuiPluginApi) => {
   // ponytail: legacy api.command bridge; move to api.keymap.registerLayer when the v1 shim is removed
   const dispose = api.command?.register(() => [
@@ -119,9 +132,7 @@ const tui = async (api: TuiPluginApi) => {
       description: "Set default for all sessions",
       category: "Agent",
       slash: { name: "subagents-model" },
-      onSelect: () => {
-        void openSelector(api, { label: "Global", read: readState, save: saveState })
-      },
+      onSelect: () => showSelector(api, { label: "Global", read: readState, save: saveState }),
     },
     {
       title: "Session subagent model",
@@ -136,7 +147,7 @@ const tui = async (api: TuiPluginApi) => {
           api.ui.toast({ variant: "warning", message: "Open a session first." })
           return
         }
-        void openSelector(api, {
+        return showSelector(api, {
           label: "Session",
           read: () => readSessionState(sessionID),
           save: (model, variant) => saveSessionState(sessionID, model, variant),
