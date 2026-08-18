@@ -2,7 +2,7 @@
 
 This file records user-visible changes to the npm package. npm provides the source commit for each published version through `gitHead`; releases published before this changelog do not have Git tags or GitHub Releases.
 
-## Unreleased
+## 0.2.2 - 2026-08-18
 
 ### Fixed
 
