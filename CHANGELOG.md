@@ -2,6 +2,11 @@
 
 This file records user-visible changes to the npm package. npm provides the source commit for each published version through `gitHead`; releases published before this changelog do not have Git tags or GitHub Releases.
 
+## 0.2.3 - 2026-08-18
+
+- Update both installation examples to pin `0.2.3`.
+- Publish the `0.2.2` fixes to npm; `0.2.2` remains a GitHub-only release because its frozen npm artifact referenced `0.2.1` in the installation examples.
+
 ## 0.2.2 - 2026-08-18
 
 ### Fixed

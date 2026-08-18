@@ -22,7 +22,7 @@ OpenCode loads server and TUI plugins from separate configuration files. Add the
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-subagent-models@0.2.1"]
+  "plugin": ["opencode-subagent-models@0.2.3"]
 }
 ```
 
@@ -31,7 +31,7 @@ OpenCode loads server and TUI plugins from separate configuration files. Add the
 ```json
 {
   "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["opencode-subagent-models@0.2.1"]
+  "plugin": ["opencode-subagent-models@0.2.3"]
 }
 ```
 
