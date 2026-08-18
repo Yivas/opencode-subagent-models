@@ -32,7 +32,13 @@ function parseStoredModelState(value: unknown): ModelState {
   const state = value as Record<string, unknown>
   const keys = Object.keys(state)
   if (state.mode === "default" && keys.length === 1) return { mode: "default" }
-  if (state.mode === "forced" && keys.every((key) => ["mode", "model", "variant"].includes(key))) {
+  const hasValidVariant = !("variant" in state)
+    || (typeof state.variant === "string" && state.variant.trim().length > 0)
+  if (
+    state.mode === "forced"
+    && keys.every((key) => ["mode", "model", "variant"].includes(key))
+    && hasValidVariant
+  ) {
     const parsed = parseModelState(state)
     if (parsed.mode === "forced") return parsed
   }

@@ -68,8 +68,13 @@ try {
   await mkdir(sessionStateDirectory, { recursive: true })
   await writeFile(join(sessionStateDirectory, "root-corrupt.json"), "{", "utf8")
   await writeFile(join(sessionStateDirectory, "root-invalid.json"), JSON.stringify({ mode: "forced", model: "invalid" }), "utf8")
+  await writeFile(
+    join(sessionStateDirectory, "root-invalid-variant.json"),
+    JSON.stringify({ mode: "forced", model: "openai/gpt-5", variant: 42 }),
+    "utf8",
+  )
   await mkdir(join(sessionStateDirectory, "root-unreadable.json"))
-  for (const rootID of ["root-corrupt", "root-invalid", "root-unreadable"]) {
+  for (const rootID of ["root-corrupt", "root-invalid", "root-invalid-variant", "root-unreadable"]) {
     await assert.rejects(
       findSessionOverride(
         `${rootID}-child`,
