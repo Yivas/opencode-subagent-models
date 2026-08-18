@@ -18,6 +18,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions --skipLibCheck src/index.ts src/state.ts src/tui.ts test.ts",
     "test": "npm run typecheck && node test.ts",
+    "check:package": "node scripts/check-package.mjs",
     "prepack": "npm test"
   },
   "devDependencies": {

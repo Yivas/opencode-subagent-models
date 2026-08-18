@@ -110,13 +110,25 @@ try {
     },
     directory: temporaryRoot,
   } as never)
+  const globalStateFailureHooks = await plugin.server({
+    client: {
+      session: {
+        get: async ({ path }: { path: { id: string } }) => ({
+          data: { parentID: path.id === "global-state-failure" ? "root-missing" : undefined },
+        }),
+      },
+    },
+    directory: temporaryRoot,
+  } as never)
   const originalWarn = console.warn
   const warnings: string[] = []
   console.warn = (message) => warnings.push(String(message))
   try {
+    await writeFile(join(temporaryRoot, "opencode", "subagent-model.json"), "{", "utf8")
     for (const [sessionID, activeHooks] of [
       ["lookup-failure", failingHooks],
       ["state-failure", stateFailureHooks],
+      ["global-state-failure", globalStateFailureHooks],
     ] as const) {
       const fallbackMessage = { model: { providerID: "anthropic", modelID: "configured" } }
       await activeHooks["chat.message"]?.(
@@ -131,7 +143,9 @@ try {
   assert.deepEqual(warnings, [
     "Could not resolve the subagent model override; using the configured model.",
     "Could not resolve the subagent model override; using the configured model.",
+    "Could not resolve the subagent model override; using the configured model.",
   ])
+  await saveState("openai/gpt-5", "high")
 
   const message = { model: { providerID: "openai", modelID: "gpt-5" } }
   await hooks["chat.message"]?.(
