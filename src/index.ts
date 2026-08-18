@@ -7,9 +7,13 @@ export async function findSessionOverride(
   sessionID: string,
   getParentID: (id: string) => Promise<string | undefined>,
 ): Promise<ModelState | undefined> {
+  const visitedSessionIDs = new Set([sessionID])
   let parentID = await getParentID(sessionID)
   if (!parentID) return undefined
   while (parentID) {
+    if (visitedSessionIDs.has(parentID)) throw new Error("Session parent cycle detected.")
+    visitedSessionIDs.add(parentID)
+
     const state = await readSessionOverride(parentID)
     if (state) return state.mode === "forced" ? state : readState()
     parentID = await getParentID(parentID)
@@ -19,10 +23,16 @@ export async function findSessionOverride(
 
 const server: Plugin = async ({ client, directory }) => ({
   "chat.message": async (input, output) => {
-    const state = await findSessionOverride(input.sessionID, async (id) => {
-      const response = await client.session.get({ path: { id }, query: { directory } })
-      return response.data?.parentID
-    })
+    let state: ModelState | undefined
+    try {
+      state = await findSessionOverride(input.sessionID, async (id) => {
+        const response = await client.session.get({ path: { id }, query: { directory } })
+        return response.data?.parentID
+      })
+    } catch {
+      console.warn("Could not resolve the subagent model override; using the configured model.")
+      return
+    }
     if (!state || state.mode === "default") return
 
     const separator = state.model.indexOf("/")

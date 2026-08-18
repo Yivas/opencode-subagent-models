@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -63,6 +63,70 @@ try {
     },
   }
   const hooks = await plugin.server({ client, directory: temporaryRoot } as never)
+
+  const sessionStateDirectory = join(temporaryRoot, "opencode", "subagent-models")
+  await mkdir(sessionStateDirectory, { recursive: true })
+  await writeFile(join(sessionStateDirectory, "root-corrupt.json"), "{", "utf8")
+  await writeFile(join(sessionStateDirectory, "root-invalid.json"), JSON.stringify({ mode: "forced", model: "invalid" }), "utf8")
+  await mkdir(join(sessionStateDirectory, "root-unreadable.json"))
+  for (const rootID of ["root-corrupt", "root-invalid", "root-unreadable"]) {
+    await assert.rejects(
+      findSessionOverride(
+        `${rootID}-child`,
+        async (id) => id === `${rootID}-child` ? rootID : undefined,
+      ),
+      /state/i,
+    )
+  }
+
+  let cycleLookups = 0
+  await assert.rejects(
+    findSessionOverride("cycle-a", async (id) => {
+      cycleLookups++
+      if (cycleLookups > 4) throw new Error("Parent lookup limit exceeded.")
+      return id === "cycle-a" ? "cycle-b" : "cycle-a"
+    }),
+    /cycle/i,
+  )
+
+  const failingHooks = await plugin.server({
+    client: {
+      session: {
+        get: async () => { throw new Error("Parent lookup failed.") },
+      },
+    },
+    directory: temporaryRoot,
+  } as never)
+  const stateFailureHooks = await plugin.server({
+    client: {
+      session: {
+        get: async () => ({ data: { parentID: "root-corrupt" } }),
+      },
+    },
+    directory: temporaryRoot,
+  } as never)
+  const originalWarn = console.warn
+  const warnings: string[] = []
+  console.warn = (message) => warnings.push(String(message))
+  try {
+    for (const [sessionID, activeHooks] of [
+      ["lookup-failure", failingHooks],
+      ["state-failure", stateFailureHooks],
+    ] as const) {
+      const fallbackMessage = { model: { providerID: "anthropic", modelID: "configured" } }
+      await activeHooks["chat.message"]?.(
+        { sessionID },
+        { message: fallbackMessage, parts: [] } as never,
+      )
+      assert.deepEqual(fallbackMessage.model, { providerID: "anthropic", modelID: "configured" })
+    }
+  } finally {
+    console.warn = originalWarn
+  }
+  assert.deepEqual(warnings, [
+    "Could not resolve the subagent model override; using the configured model.",
+    "Could not resolve the subagent model override; using the configured model.",
+  ])
 
   const message = { model: { providerID: "openai", modelID: "gpt-5" } }
   await hooks["chat.message"]?.(

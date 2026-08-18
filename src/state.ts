@@ -24,11 +24,31 @@ export function parseModelState(value: unknown): ModelState {
   return { mode: "default" }
 }
 
+function parseStoredModelState(value: unknown): ModelState {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("Invalid saved subagent model state.")
+  }
+
+  const state = value as Record<string, unknown>
+  const keys = Object.keys(state)
+  if (state.mode === "default" && keys.length === 1) return { mode: "default" }
+  if (state.mode === "forced" && keys.every((key) => ["mode", "model", "variant"].includes(key))) {
+    const parsed = parseModelState(state)
+    if (parsed.mode === "forced") return parsed
+  }
+  throw new Error("Invalid saved subagent model state.")
+}
+
+function isMissingFile(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT"
+}
+
 async function readOptionalModelState(path: string): Promise<ModelState | undefined> {
   try {
-    return parseModelState(JSON.parse(await readFile(path, "utf8")))
-  } catch {
-    return undefined
+    return parseStoredModelState(JSON.parse(await readFile(path, "utf8")))
+  } catch (error) {
+    if (isMissingFile(error)) return undefined
+    throw new Error("Could not read the saved subagent model state.", { cause: error })
   }
 }
 
