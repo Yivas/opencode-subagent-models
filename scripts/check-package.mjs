@@ -3,8 +3,17 @@ import { execFileSync } from "node:child_process"
 
 const packArguments = ["pack", "--dry-run", "--json", "--ignore-scripts"]
 const npmExecutable = process.env.npm_execpath
-const command = npmExecutable ? process.execPath : process.platform === "win32" ? "npm.cmd" : "npm"
-const npmArguments = npmExecutable ? [npmExecutable, ...packArguments] : packArguments
+const useWindowsShell = !npmExecutable && process.platform === "win32"
+const command = npmExecutable
+  ? process.execPath
+  : useWindowsShell
+    ? process.env.ComSpec ?? "cmd.exe"
+    : "npm"
+const npmArguments = npmExecutable
+  ? [npmExecutable, ...packArguments]
+  : useWindowsShell
+    ? ["/d", "/s", "/c", ["npm", ...packArguments].join(" ")]
+    : packArguments
 const output = execFileSync(command, npmArguments, { encoding: "utf8" })
 const packages = JSON.parse(output)
 
