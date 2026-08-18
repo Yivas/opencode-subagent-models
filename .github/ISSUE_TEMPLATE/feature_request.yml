@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a focused change to subagent model selection.
+title: "Feature: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the workflow that the current plugin cannot support.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain what should happen, including global, session, and Default behavior when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: List any configuration or workaround you have tried.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Package and OpenCode versions used to confirm the limitation.

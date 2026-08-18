@@ -100,6 +100,15 @@ Load a local checkout by adding its directory to the `plugin` array in both `ope
 - OpenCode `1.17.18`. Other releases work only while they retain the v1 TUI command bridge.
 - Node.js `^22.22.2`, `^24.15.0`, or `>=26.0.0` for local development.
 
+## Community
+
+This is an open source collaborative project under the MIT License. Bug reports, feature proposals, and pull requests are welcome.
+
+- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before submitting a change.
+- Use the issue templates for public bug reports and feature requests.
+- Report suspected vulnerabilities through the private channel in [`SECURITY.md`](SECURITY.md).
+- Follow [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) in project spaces.
+
 ## License
 
 [MIT](LICENSE)
