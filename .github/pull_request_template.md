@@ -8,7 +8,7 @@ Describe the problem and the behavior this pull request changes.
 - [ ] `npm pack --dry-run`
 - [ ] Tests cover changed behavior
 - [ ] Documentation reflects user-visible changes
-- [ ] The diff contains no tokens, prompts, session data, machine-specific paths, or private configuration
+- [ ] Commit messages and the diff contain no tokens, prompts, session data, machine-specific paths, private configuration, or tool and agent inventories
 
 ## Compatibility
 
