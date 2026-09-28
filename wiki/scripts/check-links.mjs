@@ -15,6 +15,32 @@ const markdownFiles = collectFiles(
 )
 const failures = []
 
+assert.equal(stripHtmlComments("before<!-- hidden <!-- nested -->after"), "beforeafter")
+// Text inside an HTML comment is not content: the links it hides must never be validated.
+assert.equal(stripCode("Install <!-- [docs](./does-not-exist.md) --> now"), "Install  now")
+// An unterminated comment swallows the rest of the file, so it fails instead of leaking its links.
+assert.throws(() => stripCode("Install <!-- [docs](./does-not-exist.md)"), /Unclosed HTML comment/)
+// A fence may contain `<!--`: code is stripped first, so it cannot abort the run on a missing `-->`.
+assert.match(
+  stripCode("```text\nInstall <!-- note\n```\n\nSee [docs](./does-not-exist.md)."),
+  /\.\/does-not-exist\.md/,
+)
+// A `-->` later in the file must not swallow the content written in between.
+assert.match(
+  stripCode("```text\nInstall <!-- note\n```\n\nSee [docs](./does-not-exist.md).\n\n<!-- closed later -->"),
+  /\.\/does-not-exist\.md/,
+)
+// A comment closed inside a fence stays code and does not change what the rest of the file reports.
+assert.equal(
+  stripCode("```text\nInstall <!-- note -->\n```\n\nSee [docs](./README.md)."),
+  "\nSee [docs](./README.md).",
+)
+// The wiki ships one logo through two paths: editing a single copy would publish two different marks.
+assert.equal(
+  readFileSync(join(repositoryRoot, "wiki", "src", "assets", "logo.svg"), "utf8"),
+  readFileSync(join(repositoryRoot, "wiki", "public", "logo.svg"), "utf8"),
+  "wiki/src/assets/logo.svg and wiki/public/logo.svg must stay identical.",
+)
 assert.ok(existsSync(dist), "Run npm run build before checking links.")
 
 for (const file of htmlFiles) {
@@ -25,7 +51,7 @@ for (const file of htmlFiles) {
 }
 
 for (const file of markdownFiles) {
-  const source = stripCode(readFileSync(file, "utf8"))
+  const source = stripCode(readFileSync(file, "utf8"), relative(repositoryRoot, file))
   for (const match of source.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
     validateRepositoryTarget(file, match[1])
   }
@@ -70,11 +96,30 @@ function validateRepositoryTarget(sourceFile, rawTarget) {
   }
 }
 
-function stripCode(source) {
-  return source
-    .replace(/<!--[^]*?-->/g, "")
-    .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[^]*?^ {0,3}\1\s*$/gm, "")
+// Code goes first: a `<!--` inside a closed fence is code, and stripping comments before it would
+// let that marker open a real comment that hides or aborts on the rest of the file. A fence left
+// unclosed is not stripped, so a `<!--` in it can still open a comment.
+function stripCode(source, sourceLabel) {
+  const withoutCode = source
+    .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1\s*$/gm, "")
     .replace(/`+[^`]*`+/g, "")
+  return stripHtmlComments(withoutCode, sourceLabel)
+}
+
+function stripHtmlComments(source, sourceLabel) {
+  let result = ""
+  let index = 0
+  while (index < source.length) {
+    const start = source.indexOf("<!--", index)
+    if (start === -1) return result + source.slice(index)
+    result += source.slice(index, start)
+    const end = source.indexOf("-->", start + 4)
+    if (end === -1) {
+      throw new Error(sourceLabel ? `Unclosed HTML comment in ${sourceLabel}.` : "Unclosed HTML comment.")
+    }
+    index = end + 3
+  }
+  return result
 }
 
 function collectFiles(directory, include, ignored = new Set()) {
