@@ -8,7 +8,7 @@ description: Install, test, package, and load a local checkout safely.
 Use a supported Node.js version and npm.
 
 ```bash
-npm install
+npm ci
 npm test
 npm run check:package
 ```

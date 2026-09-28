@@ -9,15 +9,15 @@ The supported runtime is OpenCode `1.17.18`. Other versions work only while they
 
 The server hook and TUI entry must load the same package version. Pin both configuration files instead of using an unversioned npm spec.
 
-## Node.js for development
+## Node.js
 
-The repository verifies these lines:
+These lines are declared in the package `engines` metadata:
 
 - Node.js `^22.22.2`
 - Node.js `^24.15.0`
 - Node.js `>=26.0.0`
 
-CI runs Node 22, 24, and 26 on Linux, plus Node 24 on Windows.
+CI runs Node 22, 24, and 26 on Linux, plus Node 24 on Windows. Other versions are not tested.
 
 ## Package format
 

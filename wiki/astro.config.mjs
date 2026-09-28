@@ -9,6 +9,10 @@ export default defineConfig({
       title: 'Subagent Models',
       description: 'Global and per-session model selection for OpenCode subagents.',
       favicon: '/favicon.svg',
+      logo: {
+        src: './src/assets/logo.svg',
+        alt: 'Connected subagent model nodes',
+      },
       customCss: ['./src/styles/custom.css'],
       editLink: {
         baseUrl: 'https://github.com/Yivas/opencode-subagent-models/edit/main/wiki/',

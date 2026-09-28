@@ -1,0 +1,44 @@
+---
+title: Quick start
+description: Select a model, choose its reasoning variant, and delegate work.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Start with a global selection. Add a session override only when one conversation needs a different route.
+
+<Steps>
+1. **Open the global selector.**
+
+   Use the command palette or run:
+
+   ```text
+   /subagents-model
+   ```
+
+   **Default** appears first. Models follow, grouped by provider.
+
+2. **Choose reasoning.**
+
+   Select a model, then choose one of its available variants. Choosing **Default** at this second step uses the model's own default reasoning behavior.
+
+3. **Delegate new work.**
+
+   The plugin applies the selection when OpenCode creates a subagent message. The primary conversation keeps its current model, and existing messages are not rewritten.
+
+4. **Restore agent configuration when needed.**
+
+   Run the global command again and choose **Default** in the model selector. Each delegated subagent returns to the model configured for that agent.
+</Steps>
+
+## Override one conversation
+
+Open the target conversation and run:
+
+```text
+/subagents-model-session
+```
+
+Subagents delegated from that conversation use the session selection, at any depth. Messages written in the conversation itself keep the model selected in OpenCode. Other sessions continue to use their own override or the global route.
+
+Continue with [Session selection](../../guides/session-selection/) for inheritance and session **Default** behavior.

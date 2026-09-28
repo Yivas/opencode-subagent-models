@@ -15,6 +15,8 @@ hero:
       variant: secondary
 ---
 
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
 `opencode-subagent-models` adds global and per-session model selection to OpenCode subagents. Version 0.2.3 keeps the primary session model unchanged and applies a selected reasoning variant only to delegated work.
 
 ## How selection works
@@ -24,12 +26,7 @@ hero:
 3. Without a session selection, it uses the global selection.
 4. **Default** returns control to the next documented scope.
 
-| Context | Result |
-|-|-|
-| Primary session | Keeps the model selected by OpenCode. |
-| Delegated work with a session override | Uses the nearest session model and variant. |
-| Delegated work without a session override | Uses the global selection. |
-| Global **Default** | Uses each subagent's configured model. |
+The exact precedence for global state, session state, and **Default** is in [Default and inheritance](./reference/default-and-inheritance/).
 
 :::note[Local state only]
 The plugin stores model routing choices in local JSON files. It does not store prompts, responses, provider credentials, or analytics.
@@ -37,10 +34,28 @@ The plugin stores model routing choices in local JSON files. It does not store p
 
 ## Choose a path
 
-- [Install the package](./getting-started/installation/) in both OpenCode plugin files.
-- [Make the first selection](./getting-started/quick-start/).
-- [Understand Default and inheritance](./reference/default-and-inheritance/) before combining scopes.
-- [Troubleshoot loading or state](./guides/troubleshooting/) without exposing private data.
+<CardGrid>
+  <LinkCard
+    title="Install"
+    href="./getting-started/installation/"
+    description="Pin the same package version in the server and TUI plugin files."
+  />
+  <LinkCard
+    title="Make the first selection"
+    href="./getting-started/quick-start/"
+    description="Choose a global model, reasoning variant, or one-session exception."
+  />
+  <LinkCard
+    title="Understand Default"
+    href="./reference/default-and-inheritance/"
+    description="See the exact precedence and inheritance rules before combining scopes."
+  />
+  <LinkCard
+    title="Troubleshoot safely"
+    href="./guides/troubleshooting/"
+    description="Diagnose loading and state without exposing prompts, credentials, or configuration."
+  />
+</CardGrid>
 
 ## Project boundaries
 
