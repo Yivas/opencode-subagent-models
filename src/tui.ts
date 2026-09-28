@@ -96,7 +96,7 @@ async function openSelector(api: TuiPluginApi, scope: SelectionScope) {
     }
   }
 
-  // ponytail: DialogSelect called as a plain Solid component to avoid a JSX toolchain; props are static so this is safe
+  // Call DialogSelect as a plain Solid component to avoid a JSX toolchain; these props are static.
   api.ui.dialog.replace(() =>
     api.ui.DialogSelect({
       title: `${scope.label} subagent model`,
@@ -124,7 +124,7 @@ async function showSelector(api: TuiPluginApi, scope: SelectionScope): Promise<v
 }
 
 const tui = async (api: TuiPluginApi) => {
-  // ponytail: legacy api.command bridge; move to api.keymap.registerLayer when the v1 shim is removed
+  // Keep the legacy api.command bridge; move to api.keymap.registerLayer when the v1 shim is removed.
   const dispose = api.command?.register(() => [
     {
       title: "Global subagent model",
