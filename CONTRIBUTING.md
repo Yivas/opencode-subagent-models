@@ -1,42 +1,72 @@
 # Contributing
 
-This project accepts bug reports, feature proposals, and pull requests.
+This project accepts reproducible bug reports, focused feature proposals, documentation improvements, and pull requests. Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## Before you start
+## Choose the right channel
 
-Search the existing issues before opening a new one. For security problems, follow [`SECURITY.md`](SECURITY.md) instead of using a public issue.
+- Use the [bug report form](https://github.com/Yivas/opencode-subagent-models/issues/new?template=bug_report.yml) for behavior that differs from the documentation.
+- Use the [feature request form](https://github.com/Yivas/opencode-subagent-models/issues/new?template=feature_request.yml) for a focused change to model routing.
+- Use [GitHub Private Vulnerability Reporting](https://github.com/Yivas/opencode-subagent-models/security/advisories/new) for suspected vulnerabilities. Never open a public security issue.
+- Open a pull request only for a change you are prepared to test and explain. Starting with an issue is useful when scope or compatibility is uncertain.
 
-A useful issue includes the package version, OpenCode version, Node.js version, operating system, steps to reproduce, expected behavior, and actual behavior. Remove prompts, session contents, tokens, and local configuration values.
+Search open and closed issues before submitting a new report or proposal.
 
-## Development
+## Write a useful report
+
+A bug report must include:
+
+- package, OpenCode, Node.js, and operating-system versions;
+- the smallest reproducible sequence;
+- expected and observed behavior;
+- whether the problem affects a primary session, global selection, session selection, or **Default**;
+- sanitized logs or configuration only when they are necessary to reproduce the problem.
+
+Remove tokens, prompts, conversation content, session identifiers, local paths, active configuration, endpoints, and unrelated logs. Revoke an exposed secret before reporting it.
+
+A feature request should describe the unsupported workflow, the proposed behavior, alternatives already tried, and how global, session, and **Default** behavior should interact.
+
+## Development setup
 
 Requirements:
 
 - Node.js `^22.22.2`, `^24.15.0`, or `>=26.0.0`;
 - npm.
 
-Install and verify the project:
+Install and verify the package:
 
 ```bash
-npm install
+npm ci
 npm test
+npm run check:package
 npm pack --dry-run
 ```
 
-Keep changes focused. Do not add telemetry, analytics, network calls, or persistent identifiers. The plugin must not change the primary session's model, and selecting **Default** must preserve each subagent's configured model.
+Build the documentation when changing `README.md`, `wiki/`, compatibility, installation, state, or commands:
 
-## Commit hygiene
+```bash
+cd wiki
+npm ci
+npm run build
+```
 
-Public commits describe the change and its verification. Do not append tool or agent inventories such as `MCP:` or `Agents:`. Remove prompts, session data, local paths, active configuration, and unnecessary personal identifiers from commit messages as well as file changes. Use a GitHub-provided `noreply` address if you do not intend to publish your email in Git history.
-
-Before pushing, inspect the complete commit messages and diff for the branch. Correct metadata before it reaches the public repository; removing it later requires rewriting shared history.
+Keep changes focused. Do not add telemetry, analytics, plugin-owned network calls, or persistent identifiers. The plugin must not change the primary session's model. Global **Default** must restore each subagent's configured model, and session **Default** must stop ancestor-session inheritance.
 
 ## Pull requests
 
-1. Explain the user-visible problem and the chosen fix.
-2. Add or update tests for behavior changes.
-3. Update user documentation when commands, installation, compatibility, or stored state changes.
-4. Run `npm test` and `npm pack --dry-run`.
-5. Confirm that the commits and diff contain no tokens, prompts, session data, machine-specific paths, local configuration, or tool and agent inventories.
+A pull request should:
 
-Maintainers may ask for changes or close proposals that conflict with the plugin's scope. Submission does not guarantee inclusion or a release date.
+1. explain the user-visible problem and why the change belongs in this plugin;
+2. summarize the chosen implementation and relevant alternatives;
+3. add or update tests for behavior changes;
+4. update documentation when commands, installation, compatibility, state, security, or user-visible behavior changes;
+5. record verification on supported Node.js and OpenCode baselines;
+6. identify compatibility, privacy, security, migration, and failure-mode risks;
+7. contain only commits and files intended for the public repository.
+
+Maintainers may request changes or close proposals that conflict with the plugin's scope. Submission does not guarantee inclusion, review, or a release date.
+
+## Commit and privacy checks
+
+Public commits describe the change and its verification. Do not append tool or agent inventories such as `MCP:` or `Agents:`. Remove prompts, session data, local paths, active configuration, private endpoints, and unnecessary personal identifiers from commit messages and file changes.
+
+Before pushing, inspect the full branch diff and commit messages. Correct private metadata before it reaches the public repository; removing it later requires rewriting shared history. Use a GitHub-provided `noreply` address if you do not intend to publish your email in Git history.

@@ -6,20 +6,26 @@ labels:
 body:
   - type: markdown
     attributes:
-      value: Do not include tokens, prompts, session contents, or private configuration. Report security problems through the private security form.
+      value: |
+        Search existing issues first. Do not include tokens, prompts, conversation content, session identifiers, private endpoints, local paths, or active configuration. Report suspected vulnerabilities through the [private security form](https://github.com/Yivas/opencode-subagent-models/security/advisories/new).
+
   - type: input
     id: package-version
     attributes:
       label: Package version
-      placeholder: 0.2.1
+      description: The exact installed version, such as 0.2.3.
+      placeholder: x.y.z
     validations:
       required: true
+
   - type: input
     id: opencode-version
     attributes:
       label: OpenCode version
+      description: The supported baseline is documented in the README and compatibility guide.
     validations:
       required: true
+
   - type: input
     id: environment
     attributes:
@@ -27,27 +33,60 @@ body:
       description: Operating system and Node.js version.
     validations:
       required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Affected scope
+      options:
+        - Primary session
+        - Global selection
+        - Session selection
+        - Default or inheritance
+        - TUI command or selector
+        - Installation or startup
+        - Other
+    validations:
+      required: true
+
   - type: textarea
     id: reproduction
     attributes:
-      label: Reproduction
-      description: Provide the smallest sequence that reproduces the problem.
+      label: Minimal reproduction
+      description: Provide the smallest sequence that reproduces the problem. Use placeholders for private values.
     validations:
       required: true
+
   - type: textarea
     id: expected
     attributes:
       label: Expected behavior
     validations:
       required: true
+
   - type: textarea
     id: actual
     attributes:
       label: Actual behavior
     validations:
       required: true
+
   - type: textarea
     id: additional
     attributes:
       label: Additional context
-      description: Add sanitized logs or configuration only when they help reproduce the problem.
+      description: Add sanitized logs or configuration only when necessary. Explain if the issue cannot be reproduced on the latest release or supported baseline.
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched open and closed issues for the same problem.
+          required: true
+        - label: I tested the latest release on the supported baseline, or explained why that was not possible.
+          required: true
+        - label: I removed credentials, prompts, conversation content, identifiers, private endpoints, local paths, and active configuration.
+          required: true
+        - label: This is not an undisclosed security vulnerability.
+          required: true

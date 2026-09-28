@@ -4,27 +4,59 @@ title: "Feature: "
 labels:
   - enhancement
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Keep proposals within delegated model routing. Do not include prompts, conversation content, credentials, private endpoints, local paths, or active configuration.
+
   - type: textarea
     id: problem
     attributes:
-      label: Problem
-      description: Describe the workflow that the current plugin cannot support.
+      label: Unsupported workflow
+      description: Describe the concrete workflow that the current plugin cannot support.
     validations:
       required: true
+
   - type: textarea
     id: proposal
     attributes:
       label: Proposed behavior
-      description: Explain what should happen, including global, session, and Default behavior when relevant.
+      description: Explain what should happen, including primary, global, session, and Default behavior when relevant.
     validations:
       required: true
+
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives considered
-      description: List any configuration or workaround you have tried.
+      description: List any existing configuration or workaround you tried and why it was insufficient.
+    validations:
+      required: true
+
   - type: input
     id: versions
     attributes:
-      label: Versions
+      label: Versions checked
       description: Package and OpenCode versions used to confirm the limitation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and risks
+      description: Note migration, persistence, privacy, security, provider, TUI, or failure-mode concerns.
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched open and closed issues for the same request.
+          required: true
+        - label: The proposal changes delegated model routing rather than the primary session model.
+          required: true
+        - label: I removed credentials, prompts, conversation content, identifiers, private endpoints, local paths, and active configuration.
+          required: true
+        - label: This request does not disclose a suspected vulnerability.
+          required: true
