@@ -2,12 +2,13 @@
 
 This file records user-visible changes to the npm package. npm provides the source commit for each published version through `gitHead`; releases published before this changelog do not have Git tags or GitHub Releases.
 
-## Unreleased
+## 0.2.4 - 2026-09-28
 
 ### Changed
 
 - Reorganize the package README around installation, first use, routing, failure behavior, privacy, and maintained support channels.
 - Point package metadata to the public documentation and declare the supported Node.js range; CI verifies the lower bound of each range.
+- Update both installation examples and the remaining published-version references in the README and wiki to `0.2.4`.
 
 ## 0.2.3 - 2026-08-18
 
