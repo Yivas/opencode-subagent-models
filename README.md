@@ -1,23 +1,40 @@
+<p align="center"><img src="https://yivas.github.io/opencode-subagent-models/logo.svg" alt="Connected subagent model nodes" width="64" height="64"></p>
+
 # opencode-subagent-models
 
-Set one model and reasoning variant for every OpenCode subagent, globally or for one session.
+Choose one model and reasoning variant for delegated OpenCode work, globally or for a single session.
 
-Use a stronger model for a difficult task, move delegated work to a cheaper model, or restore each subagent's configured model. Primary sessions remain unchanged. Read the [public documentation](https://yivas.github.io/opencode-subagent-models/) for guided setup and reference material.
+[![CI](https://github.com/Yivas/opencode-subagent-models/actions/workflows/ci.yml/badge.svg)](https://github.com/Yivas/opencode-subagent-models/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/opencode-subagent-models)](https://www.npmjs.com/package/opencode-subagent-models)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Yivas/opencode-subagent-models/blob/main/LICENSE)
 
-## Features
+[Documentation](https://yivas.github.io/opencode-subagent-models/) · [Installation](#installation) · [Releases](https://github.com/Yivas/opencode-subagent-models/releases) · [Contributing](https://github.com/Yivas/opencode-subagent-models/blob/main/CONTRIBUTING.md)
 
-- Applies a global `provider/model` override to delegated subagents.
-- Lets one session and its delegated subagents override the global selection.
-- Restores each subagent's configured model without rewriting agent files.
-- Adds global and session model commands under `Agent` in the command palette.
-- Registers `/subagents-model` and `/subagents-model-session`.
-- Applies changes to new delegated subagent messages without restarting OpenCode.
+OpenCode agents can already define their own models. This plugin adds a reversible override for subagents when one task needs a different balance of capability, cost, speed, or reasoning depth. It changes delegated messages only: the primary session keeps the model selected in OpenCode.
+
+**Current release:** `0.2.3` · **Validated OpenCode baseline:** `1.17.18`
+
+This is a `0.x` project in development. The selection commands and the saved state format can change between minor versions.
+
+## Highlights
+
+- Set one global `provider/model` and reasoning variant for delegated subagents.
+- Override that selection for one session and its delegation branch.
+- Restore each subagent's configured model without editing agent files.
+- Use the command palette or `/subagents-model` and `/subagents-model-session`.
+- Apply new selections without restarting OpenCode.
+- Keep routing state local, with no analytics or plugin-owned network requests.
+
+## Requirements
+
+- OpenCode `1.17.18`. Other releases are unsupported unless they retain the same v1 TUI command bridge.
+- Node.js `^22.22.2`, `^24.15.0`, or `>=26.0.0`. The package declares that range in its `engines` metadata; other versions are not tested.
 
 ## Installation
 
-OpenCode loads server and TUI plugins from separate configuration files. Add the same exact package version to both files. OpenCode caches npm plugin specs, so a pinned version avoids reusing an unversioned cache from an older release.
+OpenCode loads server and TUI plugins from separate configuration files. Pin the same exact package version in both files so the hook and commands use the same state contract.
 
-`~/.config/opencode/opencode.json`:
+Add the package to `~/.config/opencode/opencode.json`:
 
 ```json
 {
@@ -26,7 +43,7 @@ OpenCode loads server and TUI plugins from separate configuration files. Add the
 }
 ```
 
-`~/.config/opencode/tui.json`:
+Add it to `~/.config/opencode/tui.json`:
 
 ```json
 {
@@ -35,80 +52,75 @@ OpenCode loads server and TUI plugins from separate configuration files. Add the
 }
 ```
 
-Close every OpenCode instance, then start it again. OpenCode installs the pinned package on startup.
+Close every OpenCode process, then start OpenCode again.
 
-## Usage
+## First use
 
-Open the command palette and choose **Global subagent model** or **Session subagent model**. The matching slash commands are:
+Open the command palette with `Ctrl+P` and choose **Global subagent model**, or run:
 
 ```text
 /subagents-model
+```
+
+Choose a model and then one of its available reasoning variants. New delegated messages use that route; the primary session does not change.
+
+To make one session different, open it and choose **Session subagent model**, or run:
+
+```text
 /subagents-model-session
 ```
 
-Each model selector keeps **Default** first, followed by models grouped by provider. After choosing a model, select its reasoning variant. Models without variants show only **Default** in the second selector.
-
-Global **Default** restores each subagent's configured model. Session **Default** stops inheritance from session ancestors and uses the global selection.
-
-The session override applies to subagents delegated from that conversation. Other sessions and terminals keep their own session override or inherit the global selection.
-
-## Scope
+## Routing and Default
 
 | Context | Result |
 | --- | --- |
-| Delegated subagent | Uses the global override when enabled |
-| Delegated subagent in an overridden session | Uses the session model and variant |
-| Primary session | Never changed |
-| Global `Default` | Each delegated subagent uses its configured model |
+| Primary session | Keeps the model selected by OpenCode |
+| Delegated work with a session override | Uses the nearest session model and variant |
+| Delegated work without a session override | Uses the global selection |
+| Global **Default** | Uses each subagent's configured model |
+| Session **Default** | Stops ancestor-session inheritance and returns the branch to the global selection |
 
-## How it works
+Session overrides apply to descendants in the same delegation branch. Other sessions and terminals keep their own override or inherit the global selection.
 
-The global selection is stored in `~/.config/opencode/subagent-model.json`. Session selections use one file per session under `~/.config/opencode/subagent-models/`; selecting session **Default** writes a default marker there. For each delegated message, a hook resolves the nearest session override and then the global selection.
+## State and failure behavior
 
-The `default` setting skips the matching override. The plugin does not copy, edit, or back up agent files.
+The global selection is stored in `~/.config/opencode/subagent-model.json`. Session selections use one file per session under `~/.config/opencode/subagent-models/`. `XDG_CONFIG_HOME` replaces `~/.config` when it is defined.
+
+The plugin stores only model routing choices. It does not store prompts, responses, provider credentials, or conversation content. Session selection files are named with the OpenCode session identifier. If saved state or session ancestry cannot be read safely, the hook keeps the model already selected by OpenCode instead of applying another override.
+
+See [Default and inheritance](https://yivas.github.io/opencode-subagent-models/reference/default-and-inheritance/) and [Stored state](https://yivas.github.io/opencode-subagent-models/reference/stored-state/) for the complete resolution rules and schemas.
 
 ## Updating
 
-Change the pinned version in both `opencode.json` and `tui.json`, then close every OpenCode instance and reopen it. Keep both files on the same version.
+Change the pinned version in both configuration files, close every OpenCode process, and start it again. Read the [changelog](https://github.com/Yivas/opencode-subagent-models/blob/main/CHANGELOG.md) before updating.
 
 ## Troubleshooting
 
-If the commands do not appear in `Ctrl+P`, confirm that the package is present in both configuration files and that both use the same exact version. Then inspect the OpenCode startup log at `~/.local/share/opencode/log/opencode.log` for plugin loading errors.
+If the commands are missing, verify both plugin entries and inspect `~/.local/share/opencode/log/opencode.log` for startup errors. If a slash command becomes an LLM prompt, OpenCode loaded a release older than `0.2.0`.
 
-If `/subagents-model` is sent to the LLM as a prompt, OpenCode loaded a release older than `0.2.0`. Pin the current version in both files and restart every OpenCode instance. The exact version creates a separate cache, so manual cache deletion is not required.
+The [troubleshooting guide](https://yivas.github.io/opencode-subagent-models/guides/troubleshooting/) covers package caching, invalid state, unexpected routing, and safe diagnostics.
 
 ## Local development
 
 ```bash
-npm install
+npm ci
 npm test
+npm run check:package
 npm pack --dry-run
 ```
 
-Load a local checkout by adding its directory to the `plugin` array in both `opencode.json` and `tui.json`, so the server and TUI entries resolve:
+Load a local checkout by adding its `file:///path/to/opencode-subagent-models` URL to the `plugin` array in both OpenCode configuration files. Install the checkout's dependencies before starting OpenCode.
 
-```json
-{
-  "plugin": [
-    "file:///path/to/opencode-subagent-models"
-  ]
-}
-```
+## Security and privacy
 
-## Requirements
+Do not post tokens, prompts, session contents, local paths, active configuration, or unsanitized logs in a public issue. Report suspected vulnerabilities through [GitHub Private Vulnerability Reporting](https://github.com/Yivas/opencode-subagent-models/security/advisories/new). The full scope and supported-version policy are in [`SECURITY.md`](https://github.com/Yivas/opencode-subagent-models/blob/main/SECURITY.md).
 
-- OpenCode `1.17.18`. Other releases work only while they retain the v1 TUI command bridge.
-- Node.js `^22.22.2`, `^24.15.0`, or `>=26.0.0` for local development.
+## Contributing and support
 
-## Community
+This is an open source collaborative project under the MIT License. It accepts reproducible bug reports, focused feature proposals, documentation improvements, and pull requests. Read [`CONTRIBUTING.md`](https://github.com/Yivas/opencode-subagent-models/blob/main/CONTRIBUTING.md) and follow the [`CODE_OF_CONDUCT.md`](https://github.com/Yivas/opencode-subagent-models/blob/main/CODE_OF_CONDUCT.md).
 
-This is an open source collaborative project under the MIT License. Bug reports, feature proposals, and pull requests are welcome.
-
-- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before submitting a change.
-- Use the issue templates for public bug reports and feature requests.
-- Report suspected vulnerabilities through the private channel in [`SECURITY.md`](SECURITY.md).
-- Follow [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) in project spaces.
+Use the [issue forms](https://github.com/Yivas/opencode-subagent-models/issues/new/choose) for public support. No response or release deadline is promised.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/Yivas/opencode-subagent-models/blob/main/LICENSE)
