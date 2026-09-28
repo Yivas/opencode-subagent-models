@@ -12,7 +12,7 @@ Choose one model and reasoning variant for delegated OpenCode work, globally or 
 
 OpenCode agents can already define their own models. This plugin adds a reversible override for subagents when one task needs a different balance of capability, cost, speed, or reasoning depth. It changes delegated messages only: the primary session keeps the model selected in OpenCode.
 
-**Current release:** `0.2.3` · **Validated OpenCode baseline:** `1.17.18`
+**Current release:** `0.2.4` · **Validated OpenCode baseline:** `1.17.18`
 
 This is a `0.x` project in development. The selection commands and the saved state format can change between minor versions.
 
@@ -39,7 +39,7 @@ Add the package to `~/.config/opencode/opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-subagent-models@0.2.3"]
+  "plugin": ["opencode-subagent-models@0.2.4"]
 }
 ```
 
@@ -48,7 +48,7 @@ Add it to `~/.config/opencode/tui.json`:
 ```json
 {
   "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["opencode-subagent-models@0.2.3"]
+  "plugin": ["opencode-subagent-models@0.2.4"]
 }
 ```
 

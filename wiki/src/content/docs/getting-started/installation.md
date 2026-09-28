@@ -12,7 +12,7 @@ Add the package to `~/.config/opencode/opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-subagent-models@0.2.3"]
+  "plugin": ["opencode-subagent-models@0.2.4"]
 }
 ```
 
@@ -23,7 +23,7 @@ Add the package to `~/.config/opencode/tui.json`:
 ```json
 {
   "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["opencode-subagent-models@0.2.3"]
+  "plugin": ["opencode-subagent-models@0.2.4"]
 }
 ```
 

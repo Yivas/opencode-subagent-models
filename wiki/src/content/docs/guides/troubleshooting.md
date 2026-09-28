@@ -12,7 +12,7 @@ description: Diagnose missing commands, stale package caches, invalid state, and
 
 ## Slash command becomes an LLM prompt
 
-OpenCode loaded a release older than `0.2.0`. Pin `0.2.3` in both files and restart all OpenCode processes. The exact version creates a separate npm cache entry.
+OpenCode loaded a release older than `0.2.0`. Pin `0.2.4` in both files and restart all OpenCode processes. The exact version creates a separate npm cache entry.
 
 ## A subagent keeps its configured model
 
