@@ -22,8 +22,9 @@
     "prepack": "npm test"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "1.17.18",
+    "@opencode/plugin": "2.0.18",
     "@types/node": "^22.0.0",
+    "solid-js": "^1.9.15",
     "typescript": "^5.8.2"
   },
   "keywords": [
@@ -45,7 +46,8 @@
   },
   "homepage": "https://yivas.github.io/opencode-subagent-models/",
   "engines": {
-    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0",
+    "opencode": ">=2.0.0"
   },
   "publishConfig": {
     "access": "public"
