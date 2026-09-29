@@ -45,9 +45,10 @@ async function findAncestorOverride(
 }
 
 /**
- * Drops a saved override the catalog no longer resolves. The host fails the
- * subagent tool on an unknown model or variant, so writing one would break
- * delegation; the override is applied whole or not at all.
+ * Drops a saved override the catalog cannot apply. The host resolves the tool
+ * input against its own available models and fails the subagent tool on an
+ * unknown model, an unknown variant or a disabled model, so writing one would
+ * break delegation; the override is applied whole or not at all.
  */
 async function resolveCatalogModel(
   context: Plugin.Context,
@@ -58,7 +59,7 @@ async function resolveCatalogModel(
   const modelID = state.model.slice(separator + 1)
   const catalog = await context.model.list()
   const model = catalog.data.find((item) => item.providerID === providerID && item.id === modelID)
-  if (!model) return undefined
+  if (!model || !model.enabled) return undefined
   if (state.variant && !model.variants.some((variant) => variant.id === state.variant)) return undefined
   return { providerID, id: modelID, ...(state.variant ? { variant: state.variant } : {}) }
 }
@@ -76,13 +77,17 @@ export default Plugin.define({
       const input = event.input as Record<string, unknown>
       try {
         const state = await findSessionOverride(event.sessionID, getParentID)
-        if (!state) return
-        if (state.mode === "default") {
-          delete input.model
+        // Default is the absence of an override, not a rewrite. The 1.x plugin
+        // only acted on an explicit selection, so a Default state leaves the
+        // model the delegating agent asked for intact instead of dropping it.
+        if (!state || state.mode === "default") return
+        const model = await resolveCatalogModel(context, state)
+        // An override the catalog cannot apply is not written: the host fails
+        // the tool on it, so dropping it keeps the delegation working.
+        if (!model) {
+          console.warn(OVERRIDE_FAILURE_WARNING)
           return
         }
-        const model = await resolveCatalogModel(context, state)
-        if (!model) return
         input.model = `${model.providerID}/${model.id}${model.variant ? `#${model.variant}` : ""}`
       } catch {
         console.warn(OVERRIDE_FAILURE_WARNING)

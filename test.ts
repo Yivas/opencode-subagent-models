@@ -38,7 +38,7 @@ assert.equal(typeof tuiPlugin.setup, "function")
 
 type ModelRef = { id: string; providerID: string; variant?: string }
 type SessionRecord = { parentID?: string; model?: ModelRef }
-type CatalogModel = { id: string; providerID: string; variants?: string[] }
+type CatalogModel = { id: string; providerID: string; variants?: string[]; enabled?: boolean }
 
 type ToolHookEvent = { tool: string; sessionID: string; input: unknown }
 type PromptHookEvent = { sessionID: string }
@@ -81,6 +81,7 @@ function createServerPlugin(options: {
         data: (options.models ?? []).map((model) => ({
           id: model.id,
           providerID: model.providerID,
+          enabled: model.enabled ?? true,
           variants: (model.variants ?? []).map((id) => ({ id })),
         })),
       }),
@@ -111,6 +112,7 @@ async function runPromptHook(double: ServerPluginDouble, sessionID: string) {
 const catalog: CatalogModel[] = [
   { id: "gpt-5", providerID: "openai", variants: ["high"] },
   { id: "claude-opus", providerID: "anthropic", variants: ["max"] },
+  { id: "gpt-5-mini", providerID: "openai", enabled: false },
 ]
 
 try {
@@ -215,17 +217,40 @@ try {
   // A root session delegates with its own model.
   assert.equal((await runToolHook(overridePlugin, "root-one", { agent: "explore" })).model, undefined)
 
-  // The global default restores the agent's own choice, so the input override
-  // the delegating agent sent is dropped.
+  // A default state is the absence of an override, so the model the delegating
+  // agent sent must reach the subagent untouched.
   await saveState("default")
   const defaultedInput = await runToolHook(overridePlugin, "child", { agent: "explore", model: "openai/gpt-5" })
-  assert.equal("model" in defaultedInput, false)
+  assert.equal(defaultedInput.model, "openai/gpt-5")
 
-  // An override the catalog no longer resolves is not written at all.
-  await saveState("openai/removed")
-  assert.equal((await runToolHook(overridePlugin, "child", { agent: "explore" })).model, undefined)
-  await saveState("openai/gpt-5", "missing")
-  assert.equal((await runToolHook(overridePlugin, "child", { agent: "explore" })).model, undefined)
+  // No saved global state resolves to the same no-override path.
+  await rm(join(temporaryRoot, "opencode", "subagent-model.json"), { force: true })
+  const statelessInput = await runToolHook(overridePlugin, "child", { agent: "explore", model: "openai/gpt-5" })
+  assert.equal(statelessInput.model, "openai/gpt-5")
+
+  // A model the catalog cannot apply - unknown, unknown variant or disabled - is
+  // not written at all, so the delegated model survives and the host never
+  // rejects the tool input.
+  const droppedWarnings: string[] = []
+  console.warn = (message) => droppedWarnings.push(String(message))
+  try {
+    await saveState("openai/removed")
+    assert.equal((await runToolHook(overridePlugin, "child", { agent: "explore" })).model, undefined)
+    await saveState("openai/gpt-5", "missing")
+    assert.equal((await runToolHook(overridePlugin, "child", { agent: "explore" })).model, undefined)
+    await saveState("openai/gpt-5-mini")
+    assert.equal(
+      (await runToolHook(overridePlugin, "child", { agent: "explore", model: "anthropic/claude-opus" })).model,
+      "anthropic/claude-opus",
+    )
+  } finally {
+    console.warn = originalWarn
+  }
+  assert.deepEqual(droppedWarnings, [
+    "Could not resolve the subagent model override; using the configured model.",
+    "Could not resolve the subagent model override; using the configured model.",
+    "Could not resolve the subagent model override; using the configured model.",
+  ])
 
   const promptPlugin = createServerPlugin({
     sessions: {
